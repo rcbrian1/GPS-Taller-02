@@ -8,14 +8,11 @@ package gpstaller2;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import java.io.FileInputStream;
@@ -38,7 +35,8 @@ public class FXMLDocumentController implements Initializable {
     TextField txtPhrase;
     @FXML
     Button btnRun;
-
+    @FXML
+    Button btnRunCsv;
     String phrase;
 
     String[] sujeto = {"PRP", "NNP", "NNPS"};
@@ -49,29 +47,42 @@ public class FXMLDocumentController implements Initializable {
 
     InputStream tokenModelIn = null;
     InputStream posModelIn = null;
-
     @FXML
-    public void actionRun(ActionEvent event) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        /*phrase = txtPhrase.getText();
-        for (String var : sujeto) {
-            intIndex = phrase.indexOf(var);
-            if (intIndex > 0) {
-                alert.setTitle("Phrase analyzer");
-                alert.setHeaderText("Phrase analyzer");
-                alert.setContentText("The Phrase is Passive");
-                alert.showAndWait();
-                return;
+    public void actionRunCsv(ActionEvent event){
+        String csvFile = "archivo.csv";
+        BufferedReader br = null;
+        String line = "";
+        //Se define separador ","
+        String cvsSplitBy = ",";
+        try {
+            br = new BufferedReader(new FileReader(csvFile));
+            while ((line = br.readLine()) != null) {
+                String[] datos = line.split(cvsSplitBy);
+                //Imprime datos.
+                validarPhrase(datos[0]);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
-        if (intIndex < 0) {
-            alert.setTitle("Phrase analyzer");
-            alert.setHeaderText("Phrase analyzer");
-            alert.setContentText("The Phrase is Active");
-            alert.showAndWait();
-        }*/
+    }
+    @FXML
+    public void actionRun(ActionEvent event) {
+        validarPhrase(txtPhrase.getText());
+    }
+    public void validarPhrase(String sentence){
+        posicionSujeto=-1;
+        posicionAcciones=-1;
         try {
-            String sentence = txtPhrase.getText();
             // tokenize the sentence
             tokenModelIn = new FileInputStream("en-token.bin");
             TokenizerModel tokenModel = new TokenizerModel(tokenModelIn);
@@ -89,11 +100,8 @@ public class FXMLDocumentController implements Initializable {
             String tags[] = posTagger.tag(tokens);
             // Getting the probabilities of the tags given to the tokens
             double probs[] = posTagger.probs();
-
-            System.out.println("Token\t:\tTag\t:\tProbability\n---------------------------------------------");
             for (int i = 0; i < tokens.length; i++) {
                 boolean a = false;
-                System.out.println(tokens[i] + "\t:\t" + tags[i] + "\t:\t" + probs[i]);
                 for (int j = 0; j < sujeto.length; j++) {
 
                     if (tags[i].equals(sujeto[j])) {
@@ -122,19 +130,12 @@ public class FXMLDocumentController implements Initializable {
 
             }
             if (posicionSujeto == -1) {
-                alert.setTitle("Phrase analyzer");
-                alert.setHeaderText("Phrase analyzer");
-                alert.setContentText("The Phrase is Passive");
+                System.out.println("The Phrase : "+sentence+" is Passive");
             } else if (posicionSujeto < posicionAcciones) {
-                alert.setTitle("Phrase analyzer");
-                alert.setHeaderText("Phrase analyzer");
-                alert.setContentText("The Phrase is Active");
+                System.out.println("The Phrase : "+sentence+" is Active");
             } else {
-                alert.setTitle("Phrase analyzer");
-                alert.setHeaderText("Phrase analyzer");
-                alert.setContentText("The Phrase is Passive");
+                System.out.println("The Phrase : "+sentence+" is Passive");
             }
-            alert.showAndWait();
 
         } catch (IOException e) {
             // Model loading failed, handle the error
@@ -153,34 +154,7 @@ public class FXMLDocumentController implements Initializable {
                 }
             }
         }
-        /*   String csvFile = "archivo.csv";
-        BufferedReader br = null;
-        String line = "";
-//Se define separador ","
-        String cvsSplitBy = ",";
-        try {
-            br = new BufferedReader(new FileReader(csvFile));
-            while ((line = br.readLine()) != null) {
-                String[] datos = line.split(cvsSplitBy);
-                //Imprime datos.
-                System.out.println(datos[0] );
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }*/
-
     }
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
